@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Phishing Email Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="PhishGuard home">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span>PhishGuard <span class="brand-light">/ ML detector</span></span>
+    </a>
+    <span class="topbar-tag"><span class="live-dot"></span> LOCAL MODEL</span>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">EMAIL SECURITY · MACHINE LEARNING</p>
+        <h1>Spot the hook<br><span>before you click.</span></h1>
+        <p class="hero-description">Analyze an email with a text classifier trained on the included dataset, or explore the labeled examples below.</p>
+      </div>
+      <div class="hero-stamp" aria-hidden="true">
+        <span class="stamp-shield">✓</span>
+        <span>THINK<br>BEFORE<br>YOU CLICK</span>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Dataset summary">
+      <article class="stat-card">
+        <span class="stat-label">EMAILS IN DATASET</span>
+        <strong>{{ total_count }}</strong>
+        <span class="stat-foot">training examples</span>
+      </article>
+      <article class="stat-card stat-warning">
+        <span class="stat-label">LABELED PHISHING</span>
+        <strong>{{ phishing_count }}</strong>
+        <span class="stat-foot">label 1 in the dataset</span>
+      </article>
+      <article class="stat-card stat-safe">
+        <span class="stat-label">LABELED NOT PHISHING</span>
+        <strong>{{ legitimate_count }}</strong>
+        <span class="stat-foot">label 0 in the dataset</span>
+      </article>
+    </section>
+
+    <section class="analyzer panel" aria-labelledby="analyzer-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TRY IT YOURSELF</p>
+          <h2 id="analyzer-title">Analyze an email</h2>
+        </div>
+        <span class="model-chip"><span class="live-dot"></span> TF-IDF + Logistic Regression</span>
+      </div>
+      <form id="analyze-form">
+        <label for="subject">Email subject <span class="optional">OPTIONAL</span></label>
+        <input id="subject" name="subject" type="text" maxlength="500" placeholder="e.g. Urgent: verify your account">
+        <label for="body">Email body <span class="optional">OPTIONAL</span></label>
+        <textarea id="body" name="body" rows="6" maxlength="20000" placeholder="Paste the email text you want to check…"></textarea>
+        <div class="form-bottom">
+          <span class="privacy-note"><span aria-hidden="true">▣</span> Text is analyzed locally by this app.</span>
+          <button id="submit-button" type="submit"><span>Analyze email</span><span aria-hidden="true">↗</span></button>
+        </div>
+      </form>
+      <div id="result" class="result" role="status" aria-live="polite" hidden></div>
+      <p class="disclaimer">This learning demo has only {{ total_count }} labeled examples. It displays label 1 as phishing and label 0 as not phishing; verify that this mapping matches the source data before relying on it. Results are estimates, not a security guarantee. Don’t include sensitive personal information.</p>
+    </section>
+
+    <section class="dataset-section" aria-labelledby="dataset-title">
+      <div class="section-heading dataset-heading">
+        <div>
+          <p class="eyebrow">WHAT THE MODEL LEARNS FROM</p>
+          <h2 id="dataset-title">Dataset emails</h2>
+        </div>
+        <span class="dataset-total">{{ total_count }} RECORDS</span>
+      </div>
+      <div class="table-tools">
+        <label class="search-box" for="email-search"><span aria-hidden="true">⌕</span>
+          <input id="email-search" type="search" placeholder="Search sender or subject…" autocomplete="off">
+        </label>
+        <label class="filter-wrap" for="label-filter">
+          <span class="sr-only">Filter emails by label</span>
+          <select id="label-filter">
+            <option value="all">All emails</option>
+            <option value="1">Phishing</option>
+            <option value="0">Not phishing</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>EMAIL</th><th>SENDER</th><th>DATASET LABEL</th></tr>
+          </thead>
+          <tbody id="email-rows">
+            {% for email in emails %}
+            <tr data-label="{{ email.label }}" data-search="{{ (email.subject ~ ' ' ~ email.sender)|lower }}">
+              <td class="subject-cell">
+                <span class="subject-text">{{ email.subject or "(No subject)" }}</span>
+                <span class="body-preview">{{ email.body[:150] }}{% if email.body|length > 150 %}…{% endif %}</span>
+              </td>
+              <td class="sender-cell">{{ email.sender or "Unknown sender" }}</td>
+              <td>
+                {% if email.label == 1 %}
+                <span class="verdict-badge badge-phishing"><span></span> Phishing</span>
+                {% else %}
+                <span class="verdict-badge badge-safe"><span></span> Not phishing</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            <tr id="empty-state" hidden><td colspan="3" class="empty-state">No emails match your search.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Demo display mapping: <strong>label 1 = phishing</strong>, <strong>label 0 = not phishing</strong>. Confirm these meanings against the source dataset before real use.</p>
+    </section>
+
+    <footer class="footer">
+      <span>PhishGuard <span class="brand-light">· AIML project</span></span>
+      <span>Stay curious. Stay cautious.</span>
+    </footer>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
